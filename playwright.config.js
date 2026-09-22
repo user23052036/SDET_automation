@@ -14,8 +14,8 @@ import { defineConfig, devices } from '@playwright/test';
  */
 
 // we have all the configeration key value pairs
-// timeout tells the whole test case can run upto 30sec and expect timeout is for individual assestion to become true
-// here const is a variable
+// timeout tells the whole test case can run upto 40sec and expect timeout is for 
+// individual assestion to become true, here const is a variable
 
 const config = ({
   testDir: './tests',
@@ -26,7 +26,10 @@ const config = ({
   reporter: 'html', // get html report after after running the test cases
 
   use: {
-    browserName: 'chromium'
+    browserName: 'webkit',
+    // webkit is playwright specific engine derived from safari
+
+    headless : false
   },
 });
 
