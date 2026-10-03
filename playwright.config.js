@@ -14,12 +14,13 @@ import { defineConfig, devices } from '@playwright/test';
  */
 
 // we have all the configeration key value pairs
-// timeout tells the whole test case can run upto 40sec and expect timeout is for 
+// timeout tells the whole test case can run upto 30sec and expect timeout is for 
 // individual assestion to become true, we set it to 5sec
 
-const config = ({
+const config = {
   testDir: './tests',
   timeout: 30*1000, // overwriting the existing timeout
+  executablePath: '/Applications/Brave Browser.app/Contents/MacOS/Brave Browser',
   expect: {
     timeout: 5*1000
   },
@@ -31,7 +32,7 @@ const config = ({
 
     headless : false // runs headed mode i.e opens webpage while testing
   },
-});
+};
 
 
 module.exports = config // so that it is available across all the files in our project

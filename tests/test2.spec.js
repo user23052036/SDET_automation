@@ -62,4 +62,8 @@ test.only('new_test_1', async ({browser})=>{
 */
     console.log(await page.locator('.card-body .card-title a').nth(0).textContent());
 
+    // there is another way
+    // colsole.log(await page.locator('.card-body .card-title a').first().textContent());
+    // .nth(1) --> for the second element
+
 });
