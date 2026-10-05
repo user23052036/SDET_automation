@@ -24,4 +24,5 @@ var c = a + b;
 // but with const we canot reassign or redeclair because a constant value can never change throught the program
 const pi = 3.1415;
 pi = 8;
+
 console.log(pi);
