@@ -32,7 +32,7 @@ test("new_test_1", async ({ browser }) => {
   // when no error message then: style="display: none;"
   // else: style="display: block;"
   // playwright will wait for 10sec as configured by us to extract the error message,then display
-  console.log(await page.locator("[style*='block']").textContent());
+  console.log(await page.locator("[style*='block']").textContent()); // use .inputValue()
 
   // inside toContainText writting substring is enough
   await expect(page.locator("[style*='block']")).toContainText("Incorrect");

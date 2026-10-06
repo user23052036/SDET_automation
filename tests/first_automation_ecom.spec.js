@@ -31,11 +31,13 @@ test.only("ecom_test", async ({ browser }) => {
   await email.fill("qnhmtm@gmail.com");
   await password.fill("Kitti001.@");
   await signIn.click();
+  await page.waitForLoadState("networkidle");
 
   //   allTextContents() → has NO auto-waiting. It resolves
   //   immediately with whatever is in the DOM at that exact moment, even if it's empty.
 
   // getting all card titles
-  await cardTitle.not.toHaveCount(0);
-  console.log(await cardTitle.allTextContents()); //  //b[normalize-space()='ADIDAS ORIGINAL']
+  // await expect(cardTitle).not.toHaveCount(0); // this is to ensure that DOM loads before allTextContents() starts making queries
+  const allTitles = await cardTitle.allTextContents(); //  //b[normalize-space()='ADIDAS ORIGINAL']
+  console.log(allTitles);
 });
