@@ -26,7 +26,7 @@ test.only("ecom_test", async ({ browser }) => {
   const email = page.locator("//input[@id='userEmail']");
   const password = page.locator("//input[@id='userPassword']");
   const signIn = page.locator(" //input[@id='login']");
-  const cardTitle = (await page).locator(".card-body");
+  const cardTitle = page.locator(".card-body");
 
   await email.fill("qnhmtm@gmail.com");
   await password.fill("Kitti001.@");
