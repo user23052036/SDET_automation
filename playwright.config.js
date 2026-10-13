@@ -24,13 +24,16 @@ const config = {
   expect: {
     timeout: 5*1000
   },
+
   reporter: 'html', // get html report after after running the test cases
-
   use: {
-    browserName: 'chromium',
-    // webkit is playwright specific engine derived from safari
+    browserName: 'chromium', // webkit is playwright specific engine derived from safari
+    ignoreHTTPSErrors: true,  
 
-    headless : false // runs headed mode i.e opens webpage while testing
+    headless : false, // runs headed mode i.e opens webpage while testing
+    screenshot: 'on',
+    trace: 'on' // on, off, retain-on-failure
+
   },
 };
 

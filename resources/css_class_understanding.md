@@ -1,3 +1,7 @@
+# CSS Classes: one `class` attribute, many classes
+
+> Part of your Playwright notes — main index: [GUIDE.md](GUIDE.md) · quick lookups: [QUICK_REFERENCE.md](QUICK_REFERENCE.md)
+
 Great observation! That's actually **not one class name with spaces** — those are **multiple separate classes** applied to the same element.
 
 In HTML, a single element can have **many classes at once**, and you separate them with spaces:

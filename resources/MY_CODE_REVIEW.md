@@ -1,12 +1,12 @@
 # My Code Review (Playwright practice files)
 
-A review of `first_automation_ecom.spec.js`, `test2.spec.js` and `UIBasics.spec.js`. Explanations of each topic are in [GUIDE.md](GUIDE.md); quick lookups in [QUICK_REFERENCE.md](QUICK_REFERENCE.md).
+A review of `first_automation_ecom.spec.js`, `test2.spec.js` and `UIBasics.spec.js` — plus, added 13 Oct 2026, `end_to_end_automation_ecom.spec.js` and `webAPI_1.spec.js`. Explanations of each topic are in [GUIDE.md](GUIDE.md) and [API_TESTING.md](API_TESTING.md); quick lookups in [QUICK_REFERENCE.md](QUICK_REFERENCE.md).
 
 Once you've fixed your spec files, you can delete Part 1 (or this whole file) — Part 2 keeps the corrected tests as a reference.
 
 ## What's in this file
 
-- [Part 1: Mistakes Found in My Code](#part-1-mistakes-found-in-my-code) — bugs, wrong comments, risky code, clean-ups, with line numbers
+- [Part 1: Mistakes Found in My Code](#part-1-mistakes-found-in-my-code) — bugs, wrong comments, risky code, clean-ups, with line numbers (items 1–24: first three files; [items 25–41](#newer-files-13-oct-2026-end_to_end_automation_ecomspecjs-and-webapi_1specjs): the two newer files)
 - [Part 2: Full Tests, Cleaned Up and Annotated](#part-2-full-tests-cleaned-up-and-annotated) — the tests rewritten with fixes and line-by-line comments
 
 
@@ -14,7 +14,9 @@ Once you've fixed your spec files, you can delete Part 1 (or this whole file) �
 
 ## Part 1: Mistakes Found in My Code
 
-A review of your three files. Line numbers match your uploaded files.
+A review of your files. Line numbers match your files as of 13 Oct 2026.
+
+**Status check (13 Oct 2026):** #19 is fixed ✓. #15 now applies to **three** files. #16 also applies to the two newer files. All other items 1–24 are still in the files.
 
 **Labels**
 
@@ -47,11 +49,11 @@ A review of your three files. Line numbers match your uploaded files.
 | 12 | UIBasics : 61 | **RISKY** | `.type()` is deprecated |
 | 13 | UIBasics : 99–102 | **RISKY** | `toHaveAttribute("class", "blinkingText")` is an exact match |
 | 14 | UIBasics : 84 | **RISKY** | Positional XPath `//label[2]//span[2]` |
-| 15 | ecom : 21, UIBasics : 110 | **RISKY** | `test.only` left in two files |
-| 16 | ecom : 31–32 | **RISKY** | Real personal login hard-coded |
+| 15 | ecom : 21, UIBasics : 110, end_to_end : 4 | **RISKY** | `test.only` left in **three** files |
+| 16 | ecom : 31–32 (also end_to_end : 20–21, webAPI : 3) | **RISKY** | Real personal login hard-coded |
 | 17 | ecom : 34 | **RISKY** | Relying only on `networkidle` |
 | 18 | test2 : 48, 52 | **CLEAN-UP** | `fill("")` before `fill(...)` is not needed |
-| 19 | ecom : 29 | **CLEAN-UP** | `(await page).locator(...)` |
+| 19 | ecom : 29 | **CLEAN-UP** | `(await page).locator(...)` — ✓ fixed |
 | 20 | ecom : 28 | **CLEAN-UP** | Leading space in `" //input[@id='login']"` |
 | 21 | UIBasics : 3 | **CLEAN-UP** | Unused `require("node:crypto")` |
 | 22 | UIBasics : 89 | **CLEAN-UP** | `page.pause()` left in |
@@ -205,9 +207,9 @@ It works (tested: the `span` is inside the radio's `<label>`, and Playwright fol
 await expect(page.locator(".radiotextsty").last()).toBeChecked();
 ```
 
-#### 15. `test.only` in two files — ecom line 21, UIBasics line 110
+#### 15. `test.only` in three files — ecom line 21, UIBasics line 110, end_to_end line 4
 
-`test.only` applies to the **whole run**. With both present, `npx playwright test` runs only "ecom_test" and "child window"; every other test is silently skipped. Remove `.only` when you finish debugging. → [Guide → Part 1](GUIDE.md#part-1-test-setup-and-fixtures)
+`test.only` applies to the **whole run**. With all three present, `npx playwright test` runs only "ecom_test", "child window" and "ecom_automation"; every other test (including your API test) is silently skipped. Running one file by name still works, which hides the problem. Remove `.only` when you finish debugging. → [Guide → Part 1](GUIDE.md#part-1-test-setup-and-fixtures)
 
 #### 16. Real login hard-coded — `first_automation_ecom.spec.js` lines 31–32
 
@@ -217,6 +219,8 @@ Your personal email and password are in the test file. If you push this to GitHu
 await email.fill(process.env.ECOM_EMAIL);
 await password.fill(process.env.ECOM_PASSWORD);
 ```
+
+The same email/password is also in `end_to_end_automation_ecom.spec.js` lines 20–21 and in the login payload of `webAPI_1.spec.js` line 3 — see [API_TESTING.md → Part 7](API_TESTING.md#part-7-the-full-test-cleaned-up) for the `process.env` version of a payload.
 
 #### 17. Relying only on `networkidle` — `first_automation_ecom.spec.js` line 34
 
@@ -237,7 +241,7 @@ const allTitles = await cardTitle.allTextContents();
 
 #### 19. `(await page).locator(...)` — `first_automation_ecom.spec.js` line 29
 
-`page` is not a Promise, so the `await` does nothing. Write `page.locator(".card-body")`.
+`page` is not a Promise, so the `await` does nothing. Write `page.locator(".card-body")`. **✓ Fixed** in your current file.
 
 #### 20. Leading space — `first_automation_ecom.spec.js` line 28
 
@@ -269,6 +273,126 @@ In headed / `--debug` runs it stops the test every time. (In a headless run it r
 
 ---
 
+### Newer files (13 Oct 2026): `end_to_end_automation_ecom.spec.js` and `webAPI_1.spec.js`
+
+`end_to_end` = `end_to_end_automation_ecom.spec.js`, `webAPI` = `webAPI_1.spec.js`. Both files **pass** on your machine — so there are no crashing bugs left. The bugs you hit in `webAPI` during the 13 Oct session (missing `()` on `ok`, `Headers`, `.status()` on the JSON, no `goto`, `page.waitFor()`) are all fixed; they're logged in [API_TESTING.md → Part 8](API_TESTING.md#part-8-debugging-log--the-errors-you-hit-and-why).
+
+| # | File : line | Label | Issue |
+|---|---|---|---|
+| 25 | webAPI : 33 | **WRONG IDEA** | `addInitScript` "injects js into the browser console" |
+| 26 | end_to_end : 115 | **WRONG IDEA** | `OrderId.includes(rawOrderID)` is backwards |
+| 27 | end_to_end : 47–48 | **WRONG IDEA** (partly) | "need to manually wait for the cart page" |
+| 28 | end_to_end : 15–17 | **RISKY** | Positional `input[type="text"]` + `nth(0/1/2)` |
+| 29 | end_to_end : 114–115 | **RISKY** | Row id compared with `==` and without `trim()` |
+| 30 | end_to_end : 103 | **RISKY** | `td label.ng-star-inserted` — Angular's own class |
+| 31 | end_to_end : 46 | **RISKY** (small) | `:has-text()` is "contains", not "equals" |
+| 32 | both | **RISKY** (fine for practice) | Every run places a real order |
+| 33 | end_to_end : 4–6 | **CLEAN-UP** | `{ browser }` + `newContext()` not needed here |
+| 34 | end_to_end : 26–38, 107–120 | **CLEAN-UP** | Loops can be one `filter()` each |
+| 35 | end_to_end : 94–96 | **CLEAN-UP** | `toBeVisible()` before `toHaveText()` is optional |
+| 36 | end_to_end : 108 | **CLEAN-UP** | `tbody.waitFor()` works — but for a hidden reason |
+| 37 | webAPI : 31 | **CLEAN-UP** | A second API context isn't needed |
+| 38 | webAPI : 43 | **CLEAN-UP** | `content-type` header is set for you |
+| 39 | webAPI : 72 | **CLEAN-UP** | `waitFor()` before `toHaveText()` isn't needed |
+| 40 | webAPI : 11 | **CLEAN-UP** | `productName` is never used |
+| 41 | Small stuff | **CLEAN-UP** | Typos and naming |
+
+#### 25. `addInitScript` and "the browser console" — `webAPI_1.spec.js` line 33
+
+> "add InitScript function injects the js code into the browser console"
+
+It injects the code into the **page**: the function runs inside the page **before the page's own scripts**, on every load / navigation of that page. Nothing goes through the console. (The commented `localStorage...` lines at the bottom of the file are what you'd type *in* the console to do the same thing by hand.) → [API_TESTING.md → Part 6](API_TESTING.md#part-6-logging-the-browser-in-with-a-token)
+
+#### 26. `OrderId.includes(rawOrderID)` — `end_to_end_automation_ecom.spec.js` line 115
+
+```js
+if (currOrderId == OrderID){ // we could have done OrderId.includes(rawOrderID)
+```
+
+`rawOrderID` is the label text from the thank-you page, `" | 6ac888aa2be7a4bc2b96bf5a | "`. The clean id `OrderID` is **shorter** than that, so `OrderID.includes(rawOrderID)` is always `false`. What you meant is the other way round — "does the **row's** text contain the id?":
+
+```js
+if (currOrderId.includes(OrderID)) { ... }        // ✓ row text contains the id
+// or skip the loop:
+await rows.filter({ hasText: OrderID }).getByRole("button", { name: "View" }).click();
+```
+
+#### 27. "need to manually wait for the cart page" — `end_to_end_automation_ecom.spec.js` lines 47–48
+
+The `isVisible()` part is right — it doesn't wait. But the line you actually wrote, `await expect(...).toBeVisible()`, is a web-first assertion: it **waits by itself** (up to 5 s). So no manual wait is needed, and leaving line 42 commented out was correct. → [Guide → Part 5](GUIDE.md#extra-isvisible--does-not-wait)
+
+#### 28. Positional text boxes — `end_to_end_automation_ecom.spec.js` lines 15–17
+
+```js
+const cardNumber = mainPage.locator('input[type="text"]').nth(0);
+const cvv        = mainPage.locator('input[type="text"]').nth(1);
+const NameOfCard = mainPage.locator('input[type="text"]').nth(2);
+```
+
+Works today. If the page adds or reorders a text box, every index shifts silently and values go into the wrong fields. When you revisit this page, inspect each field for something of its own (`name`, a label for `getByLabel`, or its position inside its own row). → [Guide → Part 3](GUIDE.md#11-many-ways-to-find-the-same-element--which-one)
+
+#### 29. `==` and no `trim()` on the row id — `end_to_end_automation_ecom.spec.js` lines 114–115
+
+```js
+const currOrderId = await rows.nth(i).locator('th').textContent();
+if (currOrderId == OrderID) { ... }
+```
+
+Works because the `<th>` happens to contain only the id. If it ever had a space or a new line around it, the comparison would silently fail and the loop would find nothing. Your `webAPI_1.spec.js` version is better: `.trim()` + `===`. → [Guide → Part 9](GUIDE.md#12--vs-)
+
+#### 30. `td label.ng-star-inserted` — `end_to_end_automation_ecom.spec.js` line 103
+
+`ng-star-inserted` is a class **Angular adds by itself** to many elements that appear conditionally — it says nothing about *this* label. It works today because it's the only such label inside a `td` on that page (likely). If it ever breaks, look for something more specific around the order id. Same family as auto-generated classes in [css_class_understanding.md](css_class_understanding.md).
+
+#### 31. `:has-text()` is "contains" — `end_to_end_automation_ecom.spec.js` line 46
+
+`h3:has-text('IPHONE 13 PRO')` would also pass for an `h3` saying "IPHONE 13 PRO MAX" (contains, ignoring case — tested). Fine with today's product list; for an exact check use `toHaveText`: `await expect(page.locator("h3").filter({ hasText: productName })).toHaveText(productName)`.
+
+#### 32. Every run places a real order — both files
+
+Normal for this practice site. On a real project you'd clean up (e.g. delete the order through the API in `afterAll`).
+
+#### 33. `{ browser }` + `newContext()` not needed — `end_to_end_automation_ecom.spec.js` lines 4–6
+
+This test never opens a second tab or a second user, so `async ({ page }) =>` does the same in one line. (`{ browser }` was needed in the child-window test because you listened on the `context`.) → [Guide → Part 1](GUIDE.md#when-to-use-which)
+
+#### 34. Loops → `filter()` — `end_to_end_automation_ecom.spec.js` lines 26–38 and 107–120
+
+Both loops are correct and good practice. In real tests each can be one statement that also auto-waits — see [Guide → Part 10](GUIDE.md#part-10-working-with-lists-and-tables) and Test E below.
+
+#### 35. `toBeVisible()` before `toHaveText()` — `end_to_end_automation_ecom.spec.js` lines 94–96
+
+Harmless, but `toHaveText()` already retries until the toast has that text. One assertion is enough.
+
+#### 36. `tbody.waitFor()` — `end_to_end_automation_ecom.spec.js` line 108
+
+It works, and your comment (count has no auto-wait) is right. The hidden reason it works: an **empty** `<tbody>` has no size, so Playwright treats it as *not visible* and `waitFor()` keeps waiting until rows arrive (tested). `await rows.first().waitFor()` (as in `webAPI`) says what you mean more clearly. → [Guide → Part 7](GUIDE.md#5-waiting-before-a-count-loop)
+
+#### 37. Second API context — `webAPI_1.spec.js` line 31
+
+You create one context in `beforeAll` and another in the test. One shared `let apiContext` is enough. → [API_TESTING.md → Part 7](API_TESTING.md#part-7-the-full-test-cleaned-up)
+
+#### 38. `content-type` header — `webAPI_1.spec.js` line 43
+
+`data: { ... }` already sends JSON with `content-type: application/json` (tested). Only `authorization` is needed.
+
+#### 39. `waitFor()` before `toHaveText()` — `webAPI_1.spec.js` line 72
+
+`toHaveText()` retries for 5 s on its own. Delete line 72.
+
+#### 40. Unused `productName` — `webAPI_1.spec.js` line 11
+
+Declared, never used (the order payload uses the product **id**). Delete it, or keep it if you plan to check the product name on the details page.
+
+#### 41. Small stuff
+
+- `webAPI` line 14: `tets.beforeEach()` → `test.beforeEach()`.
+- `end_to_end` line 17: `NameOfCard` → `nameOnCard` (variables start lowercase in JavaScript by convention).
+- `end_to_end` line 108 comment: "doesnot" → "does not".
+- `end_to_end` comment block at lines 133–146: the 5 ways to find "Checkout" are all valid — the guide ranks them: [Guide → Part 3 §11](GUIDE.md#11-many-ways-to-find-the-same-element--which-one).
+
+---
+
 ### Your comments that are CORRECT (keep trusting these)
 
 | Where | Comment |
@@ -285,6 +409,19 @@ In headed / `--debug` runs it stops the test every time. (In a headless run it r
 | UIBasics 124–125 | Promise states; `Promise.all` gives an array only after `await` |
 | UIBasics 127–129 | `[Page, undefined]` — click returns nothing |
 | UIBasics 156–159 | Your observed output (textContent empty, inputValue shows values) |
+| end_to_end 23 | `networkidle` is "not guaranteed to work" — right, and the docs discourage it |
+| end_to_end 43, 47 | `isVisible()` has no auto-wait (tested) |
+| end_to_end 51 | No wait needed for the checkout page because `click()` auto-waits |
+| end_to_end 80 | Without an exact match, "British Indian Ocean Territory" is also picked (tested) |
+| end_to_end 86–91 | Place Order is an `<a>`, so `getByRole("button")` won't find it (tested) |
+| end_to_end 108 | `count()` has no auto-wait |
+| end_to_end 109–110 | `rows` is a locator (no await), `count()` gives a number |
+| end_to_end 124–126 | `toHaveValue` needs a locator and a form field; reading `textContent()` first gives up auto-waiting |
+| end_to_end 128–129 | `.a .b` = parent → child; `.a.b` = one element with both classes |
+| end_to_end 131 | `fill()` sets everything at once; `pressSequentially()` presses key by key |
+| webAPI 5 | The JS object is turned into JSON when sent |
+| webAPI 9 | `let` because the value is assigned later (a `const` needs its value immediately) |
+| webAPI 26 | No `await` for `loginResponseJson.token` — it's already a plain object |
 
 
 ---
@@ -515,6 +652,78 @@ If you forget to set them, `process.env.ECOM_EMAIL` is `undefined` and `fill()` 
 
 ---
 
+### Test E — E-commerce: place an order through the UI and find it in My Orders
+
+Based on `end_to_end_automation_ecom.spec.js` → "ecom_automation". Same steps and the same selectors as your passing test, except where marked **NEW**.
+
+> Not run against the real site (it couldn't be reached from the test environment). The **NEW** techniques (`filter`, `has`, waiting behaviour) were tested on local pages. Your original stays the "known good" version — if a line here fails, compare it with yours.
+
+```js
+const { test, expect } = require("@playwright/test");
+
+test("@Web place an order and find it in My Orders", async ({ page }) => {   // NEW: { page } is enough
+  const productName = "IPHONE 13 PRO";
+
+  // ---- Login ----
+  await page.goto("https://rahulshettyacademy.com/client/#/auth/login");
+  await page.locator("#userEmail").fill(process.env.ECOM_EMAIL);          // NEW: no password in the file
+  await page.locator("#userPassword").fill(process.env.ECOM_PASSWORD);
+  await page.locator("#login").click();
+
+  // ---- Add the product to the cart ----
+  // NEW: filter instead of a loop. `has` checks the NAME (<b>), not the whole card text.
+  const productCard = page.locator(".card-body")
+    .filter({ has: page.locator("b", { hasText: productName }) });
+  await productCard.locator(".fa-shopping-cart").click();                 // auto-waits for the products to load
+  await expect(page.locator(".toast-message")).toContainText("Product Added To Cart");
+
+  // ---- Cart → Checkout ----
+  await page.locator("button[routerlink*='cart']").click();
+  await expect(page.locator(`h3:has-text('${productName}')`)).toBeVisible();   // waits for the cart page
+  await page.locator("text=Checkout").click();                            // or getByRole("button", { name: "Checkout" })
+
+  // ---- Payment details ----
+  await page.locator(".payment__types .payment__type--cc").click();       // credit card
+  const textBoxes = page.locator('input[type="text"]');                   // positional — see item 28
+  await textBoxes.nth(0).fill("9999 8888 7777 6666");                     // card number
+  const expiry = page.locator("select.input.ddl");                        // 2 <select>s with both classes
+  await expiry.first().selectOption("05");                                // month
+  await expiry.last().selectOption("12");                                 // year
+  await textBoxes.nth(1).fill("123");                                     // CVV
+  await textBoxes.nth(2).fill("Souvik Mandal");                           // name on card
+  await page.locator('input[name="coupon"]').fill("rahulshettyacademy");
+  await page.getByRole("button", { name: "Apply Coupon" }).click();
+  await expect(page.getByText("* Coupon Applied")).toBeVisible();
+
+  // ---- Country (auto-suggest box) ----
+  const country = page.getByRole("textbox", { name: "Select Country" });
+  await country.pressSequentially("ind", { delay: 150 });                 // key by key → suggestions appear
+  await page.locator(".ta-results button").filter({ hasText: /^\s*India\s*$/ }).click();  // exactly "India"
+  await expect(country).toHaveValue("India");                             // input → toHaveValue
+
+  // ---- Place the order ----
+  await page.locator("a.btnn").click();                                   // an <a>, not a <button>
+  await expect(page.locator(".toast-title")).toHaveText("Order Placed Successfully");  // NEW: one assertion is enough
+
+  // ---- Read the order id from " | 6ac888aa2be7a4bc2b96bf5a | " ----
+  const rawOrderId = await page.locator("td label.ng-star-inserted").textContent();
+  const orderId = rawOrderId.split("|")[1].trim();
+  console.log(orderId);
+
+  // ---- My Orders → that row → View ----
+  await page.locator("button[routerlink='/dashboard/myorders']").click();
+  await page.locator("tbody tr")
+    .filter({ hasText: orderId })                                        // NEW: replaces the loop + tbody wait
+    .getByRole("button", { name: "View" })
+    .click();
+  await expect(page.locator(".col-text")).toHaveText(orderId);
+});
+```
+
+The API + UI version of the order check (much shorter) is in [API_TESTING.md → Part 7](API_TESTING.md#part-7-the-full-test-cleaned-up).
+
+---
+
 ### What changed compared to your originals (summary)
 
 | Change | Why |
@@ -530,3 +739,7 @@ If you forget to set them, `process.env.ECOM_EMAIL` is `undefined` and `fill()` 
 | `.card-body` → `.card-body b` (ecom) | Just the product names |
 | Credentials from `process.env` | Don't commit passwords |
 | Removed unused `node:crypto` import and `test.only` | Clean-up |
+| **Test E:** `{ browser }` → `{ page }` | No second tab or user needed |
+| **Test E:** both loops → `filter()` | Shorter, auto-waits, clear error if not found |
+| **Test E:** removed `tbody.waitFor()` and the extra `toBeVisible()` | `click()` / `toHaveText()` already wait |
+| **Test E:** kept the positional text boxes | Couldn't check better selectors on the real page — flagged as item 28 |

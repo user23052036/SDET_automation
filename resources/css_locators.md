@@ -1,5 +1,7 @@
 # Playwright CSS Locators — Beginner's Guide
 
+> Part of your Playwright notes — main index: [GUIDE.md](GUIDE.md) · quick lookups: [QUICK_REFERENCE.md](QUICK_REFERENCE.md)
+
 ## What Are Locators?
 
 In Playwright, a **locator** is how you tell the test *which element on the page* you want to interact with (click, type, read text, etc.). Think of it like giving directions — you need to describe the element precisely enough that Playwright can find exactly the right one.
@@ -52,7 +54,8 @@ tagname.class     →   div.error-message
 
 **Playwright usage:**
 ```js
-await page.locator('div.error-message').isVisible();
+await page.locator('div.error-message').isVisible();   // true/false RIGHT NOW (doesn't wait)
+// to CHECK it is shown, use: await expect(page.locator('div.error-message')).toBeVisible();
 await page.locator('.btn').click();
 ```
 
@@ -122,6 +125,8 @@ await page.locator('.login-form button').click();
 
 > 📌 The `>>` in Playwright means "look inside this parent for this child". It's Playwright's way of chaining selectors.
 
+> **Update (13 Oct 2026):** `>>` is Playwright's *older* chaining syntax — it is **not** CSS, so it won't work in SelectorsHub or DevTools. In plain CSS the **space** does the same job (`.login-form button`). Modern Playwright style chains locators: `page.locator('.login-form').locator('button')`. → [GUIDE Part 3 §6](GUIDE.md#6-extra-chaining-locators)
+
 ---
 
 ## 5. Locating by Text Content
@@ -174,6 +179,8 @@ await page.getByText('Welcome back').click();  // partial match also works
 4. **Attribute (`[attr='val']`)** — Good fallback for forms
 5. **Class (`.class`)** — Use with caution, often not unique
 6. **Parent → Child traversal** — Use to disambiguate when needed
+
+> **Update (13 Oct 2026):** Playwright's own docs rank *user-facing* locators first: `getByRole` → `getByText` / `getByLabel` → `getByTestId` (the `data-testid` attribute) → CSS / XPath. You now use `getByRole` and `getByText` in `end_to_end_automation_ecom.spec.js` — see [GUIDE Part 3 §8](GUIDE.md#8-extra-playwrights-recommended-locators) and [§11](GUIDE.md#11-many-ways-to-find-the-same-element--which-one).
 
 ---
 

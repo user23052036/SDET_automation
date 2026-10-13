@@ -1,14 +1,25 @@
 # Playwright Guide (JavaScript)
 
-Revision notes built line by line from your practice files (`first_automation_ecom.spec.js`, `test2.spec.js`, `UIBasics.spec.js`). Simple explanations, use cases and examples — mostly from your own code.
+Revision notes built line by line from your practice files (`first_automation_ecom.spec.js`, `test2.spec.js`, `UIBasics.spec.js`, and — added 13 Oct 2026 — `end_to_end_automation_ecom.spec.js` and `webAPI_1.spec.js`). Simple explanations, use cases and examples — mostly from your own code.
 
-**The notes are 3 files:**
+**The main notes are 4 files:**
 
 | File | Use it when... |
 |---|---|
 | **GUIDE.md** (this file) | You want the full explanation of a topic |
 | [QUICK_REFERENCE.md](QUICK_REFERENCE.md) | You forgot what a method does, or you're confused between two similar things (e.g. `textContent()` vs `inputValue()`) |
 | [MY_CODE_REVIEW.md](MY_CODE_REVIEW.md) | You want to see what was wrong or misleading in your code, and the corrected tests |
+| [API_TESTING.md](API_TESTING.md) | Anything about API calls: `request`, tokens, `beforeAll`, `addInitScript`, and the API errors you debugged |
+
+**Smaller topic notes** (earlier deep dives on one topic — the main points are also in this guide):
+
+| File | Topic | Also in |
+|---|---|---|
+| [css_locators.md](css_locators.md) | CSS locators for beginners: id, class, attribute, parent → child, text | [Part 3](#part-3-locators-and-selectors) |
+| [css_class_understanding.md](css_class_understanding.md) | Why `class="a b c"` is several classes, and why auto-generated class names are risky | [Part 3](#part-3-locators-and-selectors) |
+| [css_selector_choice.md](css_selector_choice.md) | Getting selectors with the SelectorsHub extension | [Part 3](#part-3-locators-and-selectors) |
+| [destructuring.md](destructuring.md) | `{ browser }` and `{ test, expect }` explained step by step | [Part 9](#part-9-javascript-basics-used-in-tests) |
+| [timeout_concept.md](timeout_concept.md) | Test timeout vs `expect` timeout vs action timeout | [Part 7](#part-7-waiting-and-timing) |
 
 **Tip:** press `Ctrl+F` and search for a method name (e.g. `inputValue`) to jump to every place it's explained.
 
@@ -16,13 +27,15 @@ Revision notes built line by line from your practice files (`first_automation_ec
 
 - [Part 1: Test Setup and Fixtures](#part-1-test-setup-and-fixtures) — `require`, `test()`, `test.only`, `{ browser }` vs `{ page }`, context, `goto`, headless, `page.pause()`
 - [Part 2: Async, Await and Promises](#part-2-async-await-and-promises) — when to write `await` and when not to, `Promise.all`
-- [Part 3: Locators and Selectors](#part-3-locators-and-selectors) — `page.locator()`, CSS, XPath, `first()` / `last()` / `nth()`, strict mode
-- [Part 4: Actions](#part-4-actions) — `fill`, `type`, `click`, `check`, `uncheck`, `selectOption`, radio buttons, pop-ups
-- [Part 5: Reading Data from the Page](#part-5-reading-data-from-the-page) — `textContent`, `inputValue`, `allTextContents`, `isChecked`, `page.title`
-- [Part 6: Assertions with expect](#part-6-assertions-with-expect) — `toHaveTitle`, `toContainText`, `toBeChecked`, `toHaveAttribute`, `toHaveCount`, `toBeFalsy` ...
-- [Part 7: Waiting and Timing](#part-7-waiting-and-timing) — auto-waiting, `waitFor()`, `waitForLoadState`, why `networkidle` failed
+- [Part 3: Locators and Selectors](#part-3-locators-and-selectors) — `page.locator()`, CSS, XPath, `first()` / `last()` / `nth()`, strict mode, `getByRole` / `getByText`, `text=`, `filter()`
+- [Part 4: Actions](#part-4-actions) — `fill`, `type`, `click`, `check`, `uncheck`, `selectOption`, radio buttons, pop-ups, auto-suggest dropdowns
+- [Part 5: Reading Data from the Page](#part-5-reading-data-from-the-page) — `textContent`, `inputValue`, `allTextContents`, `isChecked`, `page.title`, `isVisible`
+- [Part 6: Assertions with expect](#part-6-assertions-with-expect) — `toHaveTitle`, `toContainText`, `toBeChecked`, `toHaveAttribute`, `toHaveCount`, `toBeFalsy`, `toHaveValue`, `toBeVisible` ...
+- [Part 7: Waiting and Timing](#part-7-waiting-and-timing) — auto-waiting, `waitFor()`, `waitForLoadState`, why `networkidle` failed, waiting before `count()`
 - [Part 8: New Tabs and Child Windows](#part-8-new-tabs-and-child-windows) — `context.waitForEvent("page")`, `Promise.all`, two tabs
-- [Part 9: JavaScript Basics Used in Tests](#part-9-javascript-basics-used-in-tests) — destructuring, arrow functions, `split()`, truthy/falsy
+- [Part 9: JavaScript Basics Used in Tests](#part-9-javascript-basics-used-in-tests) — destructuring, arrow functions, `split()`, truthy/falsy, `for` loops, `===`, template literals, regex
+- [Part 10: Working with Lists and Tables](#part-10-working-with-lists-and-tables) — find one product / order row among many and act on it
+- **API testing** (login and orders through the API, tokens, `beforeAll`) → separate file: [API_TESTING.md](API_TESTING.md)
 
 ---
 
@@ -53,6 +66,15 @@ Revision notes built line by line from your practice files (`first_automation_ec
 | Cut a piece out of a text | `text.split("@")[1]` | [Part 9](#part-9-javascript-basics-used-in-tests) |
 | Run only one test | `test.only(...)` | [Part 1](#part-1-test-setup-and-fixtures) |
 | Stop the test and look around (debug) | `await page.pause()` | [Part 1](#part-1-test-setup-and-fixtures) |
+| Click a button by its visible name | `await page.getByRole("button", { name: "Apply Coupon" }).click()` | [Part 3](#part-3-locators-and-selectors) |
+| Find an element by its text | `page.getByText("...")` or `page.locator("text=...")` | [Part 3](#part-3-locators-and-selectors) |
+| Keep only the items that contain a text | `locator.filter({ hasText: "..." })` | [Part 3](#part-3-locators-and-selectors) |
+| Type slowly into an auto-suggest box | `await locator.pressSequentially("ind", { delay: 150 })` | [Part 4](#part-4-actions) |
+| Check what's typed in a textbox | `await expect(locator).toHaveValue("India")` | [Part 6](#part-6-assertions-with-expect) |
+| Check an element is shown | `await expect(locator).toBeVisible()` | [Part 6](#part-6-assertions-with-expect) |
+| Find one product / row in a list and act on it | loop with `nth(i)`, or `filter()` | [Part 10](#part-10-working-with-lists-and-tables) |
+| Run setup once before the tests | `test.beforeAll(async () => { ... })` | [Part 1](#part-1-test-setup-and-fixtures) |
+| Log in with an API call instead of the UI | `request.newContext()` + `post()` + `page.addInitScript()` | [API_TESTING.md](API_TESTING.md) |
 
 ---
 
@@ -84,7 +106,7 @@ Almost every test follows this order:
 2. **A locator is a search instruction, not the element.** It is created instantly and only searches the page when you use it. → [Part 3](#part-3-locators-and-selectors)
 3. **Form fields (textbox, textarea, dropdown) are read with `inputValue()`; everything else with `textContent()`.** → [Part 5](#part-5-reading-data-from-the-page)
 4. **If a locator matches many elements, pick one** with `first()` / `last()` / `nth(i)` before using single-element methods like `click()` or `textContent()` (this is called *strict mode*). → [Part 3](#part-3-locators-and-selectors)
-5. **`allTextContents()` does not wait.** Wait for the list first. → [Part 7](#part-7-waiting-and-timing)
+5. **`allTextContents()`, `count()` and `isVisible()` do not wait.** Wait for the list / element first. → [Part 7](#part-7-waiting-and-timing)
 6. **Prefer `await expect(...)` checks** over "read a value then compare", because `expect` retries for up to 5 seconds. → [Part 6](#part-6-assertions-with-expect)
 7. **`first()` needs brackets.** `first` without `()` is a bug. → [MY_CODE_REVIEW.md](MY_CODE_REVIEW.md#part-1-mistakes-found-in-my-code)
 
@@ -96,6 +118,7 @@ Almost every test follows this order:
 - The tricky claims (e.g. `textContent()` on an input, `allTextContents()` not waiting, strict mode errors, `fill()` clearing text, the `networkidle` problem) were **tested by running small Playwright tests** (Playwright v1.56.0, October 2026) on local copies of similar pages.
 - **(likely)** = the best explanation available, but not proven on the real course website (which couldn't be reached from the test environment).
 - **Extra** = not in your files, but closely related and worth knowing. Skip on a first read.
+- **Update 13 Oct 2026:** the sections added from `end_to_end_automation_ecom.spec.js` and `webAPI_1.spec.js` were checked the same way (Playwright v1.56.0, small local pages). Your own runs use v1.63.0.
 
 
 ---
@@ -249,7 +272,7 @@ test.only("child window", async ({ browser }) => { ... });
 ```
 
 - When any test is marked `.only`, Playwright runs **only the `.only` tests** and skips everything else.
-- This applies to the **whole run**, not just the file. Right now both `first_automation_ecom.spec.js` ("ecom_test") and `UIBasics.spec.js` ("child window") have `test.only`, so running `npx playwright test` runs only those two tests.
+- This applies to the **whole run**, not just the file. Right now **three** files have `test.only`: `first_automation_ecom.spec.js` ("ecom_test"), `UIBasics.spec.js` ("child window") and `end_to_end_automation_ecom.spec.js` ("ecom_automation"). So `npx playwright test` runs only those three tests and silently skips the rest (including `webAPI_1.spec.js` and `test2.spec.js`). Running one file by name (`npx playwright test tests/webAPI_1.spec.js`) still works, which is why you didn't notice.
 - **Remove `.only` when you're done** — it's easy to forget and then other tests silently stop running.
 
 > **Extra:** `test.skip("name", async ...)` does the opposite — skips that one test.
@@ -308,6 +331,26 @@ await page.pause(); // opens Playwright Inspector so you can see the selected op
 
 ---
 
+### 10. Hooks — `test.beforeAll`, `test.beforeEach` (from `webAPI_1.spec.js`)
+
+A **hook** is code Playwright runs *around* your tests, not as a test itself.
+
+| Hook | Runs |
+|---|---|
+| `test.beforeAll(async () => { ... })` | once, before the tests in the file (once per worker) |
+| `test.beforeEach(async ({ page }) => { ... })` | before **every** test |
+| `test.afterEach(...)` / `test.afterAll(...)` | after every test / once at the end |
+
+```js
+let token;                                      // declared outside → shared by the hook and the test
+test.beforeAll(async () => { token = "..."; }); // e.g. log in once via the API
+test("uses the token", async ({ page }) => { /* token is filled here */ });
+```
+
+Typical use: `beforeEach` for "open the login page" when every test starts there; `beforeAll` for expensive one-time setup like getting an API token. In the HTML report they appear as **Before Hooks** / **After Hooks**. Your real code and details: [API_TESTING.md → Part 5](API_TESTING.md#part-5-hooks-and-sharing-values-between-them).
+
+---
+
 ### Recap: Test Setup and Fixtures
 
 - `require("@playwright/test")` gives you `test` (define tests) and `expect` (check results).
@@ -316,6 +359,7 @@ await page.pause(); // opens Playwright Inspector so you can see the selected op
 - `goto` waits for the `load` event — not for data loaded later.
 - `test.only` affects the whole run. Remove it after use.
 - Headless is the default. Use `--headed` / `--debug` to see things. `page.pause()` only pauses in headed mode.
+- Hooks: `beforeAll` = once (per worker), `beforeEach` = before every test. Share values with `let` at the top of the file.
 
 
 ---
@@ -441,7 +485,7 @@ Your note in `test2.spec.js` is correct:
 - `page.locator()` is **synchronous** — it returns a `Locator` object directly, not a Promise.
 - So `await page.locator(...)` does nothing, and VS Code warns you.
 
-Same thing in `first_automation_ecom.spec.js`:
+Same thing in an older version of `first_automation_ecom.spec.js` (you've since fixed this line ✓):
 
 ```js
 const cardTitle = (await page).locator(".card-body");   // works, but the await does nothing
@@ -500,6 +544,28 @@ const title = await page.title();                           // F
 
 ---
 
+### 9. Brackets around `await` — `(await x.textContent()).trim()`
+
+From your `end_to_end_automation_ecom.spec.js`:
+
+```js
+const product = (await cardBody.nth(i).locator("b").textContent()).trim();
+```
+
+Why the brackets? `.trim()` is a **string** method. You want to call it on the *text*, and the text only exists after the `await` has finished.
+
+```js
+await locator.textContent().trim();     // ✗ TypeError: ...textContent(...).trim is not a function (tested)
+                                        //   → .trim() runs on the Promise, BEFORE the await
+(await locator.textContent()).trim();   // ✓ wait for the text first, then trim it
+```
+
+Same idea in your API test: `(await orderResponse.json()).orders[0]`.
+
+**Rule:** to do something *with the result* of an `await` on the same line, wrap the `await ...` part in brackets.
+
+---
+
 ### Recap: Async, Await and Promises
 
 - `await` = wait for the browser job to finish.
@@ -507,6 +573,7 @@ const title = await page.title();                           // F
 - Don't `await` `page.locator()` / `first()` / `last()` / `nth()`.
 - `await expect(locator).toXxx()` vs `expect(await locator.read()).toXxx()` — depends on what's inside `expect()`.
 - `Promise.all` = start together, wait for all, results in an array in the same order.
+- To use the result on the same line: `(await locator.textContent()).trim()` — brackets first.
 
 
 ---
@@ -560,12 +627,16 @@ Playwright treats the string as **CSS** unless it starts with `//` (then it's XP
 | **Extra:** `[attr^='start']` | attribute starts with | `[href^='https']` |
 | **Extra:** `[attr$='end']` | attribute ends with | `[href$='.pdf']` |
 | **Extra:** `tag.class` | this tag with this class | `select.form-control` |
+| `.a.b` (no space) | **one** element that has **both** classes | `select.input.ddl` (a `<select>` with classes `input` and `ddl`) |
+| `tag[attr*='part']` | this tag + attribute contains | `button[routerlink*='cart']` |
+| `tag[attr='value']` | this tag + attribute equals | `button[routerlink='/dashboard/myorders']` |
 
 #### Notes on your selectors
 
 - **`input#username`** — An id should be unique on the page, so id-based selectors are the most reliable choice when an id exists (your comment is right).
 - **`[style*='block']`** — finds "an element whose `style` attribute contains `block`". It works for the error message (`display: none` → `display: block` when the error shows), but it is **fragile**: any other element with `block` in its style would match too. If the element has a class or id (e.g. `.alert`), prefer that.
 - **`.card-body b`** vs **`.card-body`** — `.card-body` gives you the *whole card* (name, price, button text...). `.card-body b` gives only the `<b>` inside it (the product name). Pick the smallest element that holds exactly what you want.
+- **`.a .b` vs `.a.b`** (your note in `end_to_end_automation_ecom.spec.js` — correct): the space matters. `.card-body .card-title` = a `.card-title` *inside* a `.card-body` (two elements). `.input.ddl` = *one* element having both classes.
 
 ---
 
@@ -655,7 +726,16 @@ page.locator(".card-body b");                  // one selector string
 page.locator(".card-body").locator("b");       // same result, chained
 ```
 
-Chaining becomes very useful later, e.g. "find the card that contains *zara coat 3*, then click *its* Add to Cart button".
+You now use exactly this in `end_to_end_automation_ecom.spec.js` — pick one card, then search **inside that card only**:
+
+```js
+const cardBody = page.locator(".card-body");
+await cardBody.nth(i).locator("b").textContent();                  // the name in card i
+await cardBody.nth(i).locator(".fa-shopping-cart").click();         // the cart button in THE SAME card
+await rows.nth(i).getByRole("button", { name: "View" }).click();    // getBy... methods chain too
+```
+
+Without chaining, `page.locator(".fa-shopping-cart")` would match every card's button (strict mode error). The full loop pattern is in [Part 10](#part-10-working-with-lists-and-tables).
 
 ---
 
@@ -667,12 +747,13 @@ const n = await page.locator(".card-body").count();   // number of matches right
 
 - Returns a number. **Does not wait** — if the list hasn't loaded yet, you get `0` (tested).
 - To *check* a count, prefer `await expect(locator).toHaveCount(4)` because it retries.
+- Before a `count()` loop, wait for the items first — see [Part 7 §5](#5-waiting-before-a-count-loop).
 
 ---
 
 ### 8. Extra: Playwright's recommended locators
 
-The official docs recommend "user-facing" locators because they survive HTML changes better. You'll meet them later in the course. (The examples below are generic — check the real labels/text on your page.)
+The official docs recommend "user-facing" locators because they survive HTML changes better. You now use `getByRole` and `getByText` in `end_to_end_automation_ecom.spec.js` — the matching rules are right after the table.
 
 | Locator | Finds by | Example |
 |---|---|---|
@@ -683,6 +764,112 @@ The official docs recommend "user-facing" locators because they survive HTML cha
 
 They return normal locators, so `first()`, `click()`, `textContent()` etc. all work the same way.
 
+#### How `getByRole(role, { name })` matches (tested)
+
+```js
+await page.getByRole("button", { name: "Apply Coupon" }).click();          // your code
+const country = page.getByRole("textbox", { name: "Select Country" });    // your code
+```
+
+| Rule | Example |
+|---|---|
+| `name` matches **part** of the name, **ignoring case**, by default | `{ name: "India" }` matched both "India" and "British Indian Ocean Territory" |
+| `exact: true` = the whole name, case-sensitive | `{ name: "India", exact: true }` → only "India" |
+| Spaces at the start/end of the name are ignored | the suggestion text `" India"` (after the 🔍 icon) still has the name "India" |
+| A textbox's name comes from its `<label>` — or its `placeholder` if there's no label | `placeholder="Select Country"` → `{ name: "Select Country" }` worked |
+| The **role** comes from the HTML tag (or a `role="..."` attribute), not from how it looks | see below |
+
+**"Looks like a button, but isn't"** — your Place Order note is correct (tested):
+
+```html
+<a class="btnn action__submit">Place Order <i class="icon"></i></a>
+```
+
+- An `<a>` **without `href`** has no button role — it isn't even a `link` (only `<a href="...">` is a link).
+- So `getByRole("button", { name: "Place Order" })` finds **0** elements. Use the class (`a.btnn`, `.action__submit`) or the text (`getByText("Place Order")`).
+
+#### `getByText(text)`
+
+```js
+await expect(page.getByText("* Coupon Applied")).toBeVisible();   // your code
+```
+
+Same matching rules: part of the text, ignoring case, by default; `{ exact: true }` for the whole text. If several elements contain the text, narrow it down: `page.locator("button").getByText("Apply Coupon")`.
+
+---
+
+### 9. Playwright text selectors: `text=` and `:has-text()`
+
+These work inside `page.locator("...")` but are **Playwright-only** — they are not real CSS, so they don't work in SelectorsHub or the DevTools search box.
+
+| Selector | Matches | Tested on two buttons: `Checkout now`, `CHECKOUT` |
+|---|---|---|
+| `text=Checkout` | elements whose text **contains** "Checkout", **ignoring case** | 2 matches |
+| `text="Checkout"` (with quotes) | text is **exactly** "Checkout" (case-sensitive) | 0 matches |
+| `button:has-text('Checkout')` | `button`s containing that text, ignoring case | 2 matches |
+
+From your code:
+
+```js
+await page.locator("text=Checkout").click();
+await expect(page.locator(`h3:has-text('${productName}')`)).toBeVisible();   // `${}` = template literal, see Part 9
+```
+
+**Rule of thumb:** prefer `getByRole` / `getByText` in new code; `text=` and `:has-text()` are fine and you'll see them in older examples.
+
+---
+
+### 10. `filter()` — keep only the matches that contain something
+
+```js
+await page.locator(".ta-results button").filter({ hasText: /^\s*India\s*$/ }).click();   // your code
+```
+
+`filter()` takes a locator that matches many elements and **keeps only those that contain the text** (or a child element).
+
+| Option | Keeps elements that... |
+|---|---|
+| `{ hasText: "India" }` | contain "India" anywhere, ignoring case → kept **2** (India *and* British **India**n Ocean Territory) (tested) |
+| `{ hasText: /^\s*India\s*$/ }` | whole text is "India", spaces allowed around it → kept **1** (tested) |
+| `{ hasNotText: "Sold out" }` | do **not** contain the text |
+| `{ has: page.locator(".fa-shopping-cart") }` | contain a matching child element |
+
+The regex is explained in [Part 9 §14](#14-regular-expressions-regex--just-enough).
+
+`filter()` returns a locator, so you can keep chaining:
+
+```js
+await page.locator("tbody tr").filter({ hasText: orderId }).getByRole("button", { name: "View" }).click();
+```
+
+That one line replaces the whole "loop over the rows" in your order tests — see [Part 10](#part-10-working-with-lists-and-tables).
+
+---
+
+### 11. Many ways to find the same element — which one?
+
+`end_to_end_automation_ecom.spec.js` lists several ways for the same buttons. They all work; here's how to choose:
+
+| Way | Checkout button | Apply Coupon button | Stability |
+|---|---|---|---|
+| `getByRole` + name | `getByRole("button", { name: "Checkout" })` | `getByRole("button", { name: "Apply Coupon" })` | ✓✓ best — what the user sees |
+| tag + `:has-text()` | `locator("button:has-text('Checkout')")` | `locator("button:has-text('Apply Coupon')")` | ✓ good |
+| `text=` | `locator("text=Checkout")` | — | ✓ ok (can also match non-buttons) |
+| `getByText`, narrowed | — | `locator("button").getByText("Apply Coupon")` | ✓ ok |
+| CSS by structure | `locator("li.totalRow button")` | — | ~ breaks if the layout changes |
+| XPath by text | `locator("//button[normalize-space()='Checkout']")` | — | ~ works, longer |
+| text + position | — | `getByText("Apply Coupon").last()` | ✗ breaks if the layout changes |
+
+**Watch out — positional locators.** In your checkout code:
+
+```js
+const cardNumber = page.locator('input[type="text"]').nth(0);
+const cvv        = page.locator('input[type="text"]').nth(1);
+const nameOnCard = page.locator('input[type="text"]').nth(2);
+```
+
+This works today, but if the site adds or moves one text box, every index shifts and you type the CVV into the wrong field. Prefer something tied to *that* field: a `name` attribute, its label (`getByLabel`), or its position *inside its own section*. Fine as a first version — just know why it's fragile.
+
 ---
 
 ### Recap: Locators and Selectors
@@ -692,6 +879,10 @@ They return normal locators, so `first()`, `click()`, `textContent()` etc. all w
 - XPath starts with `//`; `@class='x'` is an exact whole-attribute match; `normalize-space()` cleans spaces.
 - Many matches + single-element method = strict mode error → use `first()` / `last()` / `nth(i)` (0-based, with brackets!).
 - `allTextContents()`, `count()`, `toHaveCount()` are meant for many elements.
+- `getByRole(role, { name })` / `getByText()` match part of the text, ignoring case, by default; `exact: true` = whole text. The role comes from the tag — an `<a>` styled as a button is not a button.
+- `text=X` / `:has-text('X')` are Playwright-only, "contains + ignore case"; `text="X"` = exact.
+- `.filter({ hasText })` keeps matches containing a text or regex, and it chains.
+- `.a.b` = one element with both classes; `.a .b` = `b` inside `a`.
 
 
 ---
@@ -770,6 +961,14 @@ await page.locator("#userPassword").fill("Iamking@000");   // ✓ use this
 ```js
 await page.locator("#country").pressSequentially("ind");   // suggestion list appears as you "type"
 ```
+
+Your checkout code adds a pause between keys, like a real person typing:
+
+```js
+await country.pressSequentially("ind", { delay: 150 });   // 150 ms between keys
+```
+
+Full flow: [Auto-suggest (type-ahead) dropdowns](#auto-suggest-type-ahead-dropdowns) below.
 
 ---
 
@@ -879,7 +1078,39 @@ await dropdown.selectOption({ index: 2 });             // Extra: 3rd option (0-b
 
 To read back what's selected: `await dropdown.inputValue()` → returns the **value** (`"consult"`), not the label.
 
+**Two dropdowns with the same class** (your card expiry date):
+
+```js
+const expiry = page.locator("select.input.ddl");   // matches 2 <select>s: month and year
+await expiry.first().selectOption("05");          // month
+await expiry.last().selectOption("12");           // year
+```
+
+`selectOption` is a one-element action, so with 2 matches you must pick one (strict mode).
+
 > Many modern sites build "dropdowns" out of `<div>`s instead of `<select>`. `selectOption` won't work on those — you click to open them and click the option instead.
+
+---
+
+### Auto-suggest (type-ahead) dropdowns
+
+The country box on the checkout page is **not** a `<select>` — it's a textbox that shows a list of `<button>`s as you type. `selectOption` won't work on it. The pattern from your code:
+
+```js
+const country = page.getByRole("textbox", { name: "Select Country" });
+
+await country.pressSequentially("ind", { delay: 150 });                               // 1. type slowly → suggestions appear
+await page.locator(".ta-results button").filter({ hasText: /^\s*India\s*$/ }).click(); // 2. click the exact suggestion
+await expect(country).toHaveValue("India");                                           // 3. the box now says India
+```
+
+| Step | Why |
+|---|---|
+| `pressSequentially`, not `fill` | `fill()` sets the whole value in one go; many auto-suggest boxes only react to real key presses (your note at the bottom of the file is right) |
+| `filter` with a regex | "ind" also suggests *British Indian Ocean Territory*; plain `"India"` would match both → strict mode error on `click()` |
+| `toHaveValue` | the box is an `<input>` → check its **value**, not its text |
+
+`click()` on the suggestion auto-waits, so you don't need to wait for the list yourself.
 
 ---
 
@@ -894,6 +1125,7 @@ To read back what's selected: `await dropdown.inputValue()` → returns the **va
 | Tick / untick | `check()` / `uncheck()` (safer than `click()`) |
 | Choose dropdown option | `selectOption("label or value")` |
 | Click a button in an HTML pop-up box | normal locator + `click()` |
+| Choose from an auto-suggest list | `pressSequentially(...)` → click the suggestion (`filter`) → `toHaveValue` |
 
 All actions: `await` + auto-wait + one element only (strict mode).
 
@@ -917,6 +1149,7 @@ How to get text, typed values, checkbox state and the page title out of the brow
 | `page.title()` | the tab title (`<title>` tag) | the page | `string` | — | — |
 | **Extra:** `innerText()` | the text **as you see it on screen** | any element | `string` | **Yes** | Error (strict mode) |
 | **Extra:** `allInnerTexts()` | `innerText` of every match | any elements | `string[]` | **NO** | That's its job |
+| **Extra:** `isVisible()` | is it shown on screen **right now**? | any element | `true` / `false` | **NO** — answers immediately | Error (strict mode) |
 
 All of them need `await`.
 
@@ -1135,6 +1368,19 @@ For most simple elements both give the same result. Use `innerText()` when you w
 
 ---
 
+### Extra: `isVisible()` — does NOT wait
+
+Your comments in `end_to_end_automation_ecom.spec.js` are correct: `isVisible()` answers **immediately**. Tested: an element that appeared after 0.7 s → `isVisible()` returned `false` straight away, while `await expect(locator).toBeVisible()` waited and passed.
+
+```js
+if (await page.locator(".promo-banner").isVisible()) { /* close it */ }     // OK: you really mean "right now"
+await expect(page.locator(`h3:has-text('${productName}')`)).toBeVisible(); // ✓ to CHECK that something is shown
+```
+
+**Rule of thumb:** to verify → `toBeVisible()`. `isVisible()` only inside an `if`.
+
+---
+
 ### Reading vs asserting — the matching pairs
 
 If your goal is to **verify** something (not print it), use the `expect` version on the right. It retries, so it's less flaky.
@@ -1147,6 +1393,7 @@ If your goal is to **verify** something (not print it), use the `expect` version
 | `await locator.isChecked()` | `await expect(locator).toBeChecked()` |
 | `await page.title()` | `await expect(page).toHaveTitle("...")` |
 | `await locator.count()` | `await expect(locator).toHaveCount(n)` |
+| `await locator.isVisible()` | `await expect(locator).toBeVisible()` |
 
 ---
 
@@ -1156,6 +1403,7 @@ If your goal is to **verify** something (not print it), use the `expect` version
 - `inputValue()` throws on non-form elements. `textContent()` returns `""` on inputs.
 - `allTextContents()` does **not** wait — wait first.
 - `isChecked()` gives true/false; `toBeChecked()` asserts with retries.
+- `isVisible()` does not wait — use `toBeVisible()` to check.
 - Everything here needs `await`.
 
 
@@ -1228,6 +1476,18 @@ await expect(cardTitle).toHaveText(["iphone X", "Samsung Note 8", "Nokia Edge", 
 
 **Rule of thumb:** `toContainText` when you know a key word; `toHaveText` when you know the exact full text.
 
+#### Checking a toast (pop-up) message — your code
+
+```js
+await expect(page.locator(".toast-message")).toContainText("Product Added To Cart");
+
+const toast = page.locator(".toast-title");
+await expect(toast).toBeVisible();
+await expect(toast).toHaveText("Order Placed Successfully");
+```
+
+Toasts disappear after a few seconds. Web-first assertions suit them well: they pass as soon as the toast shows up, while a `textContent()` read a bit later could miss it. (`toBeVisible()` before `toHaveText()` is optional — `toHaveText` already retries until the text matches.)
+
 ---
 
 ### 4. Checkbox / radio assertions
@@ -1295,6 +1555,8 @@ await expect(cardTitle).not.toHaveCount(0);    // at least one match (retries un
 | `await expect(locator).toBeEnabled()` / `toBeDisabled()` | button/input enabled or not |
 | `await expect(page).toHaveURL(/shop/)` | current URL |
 
+You now use `toBeVisible()` (cart page, toast, coupon message) and `toHaveValue()` (country box) in `end_to_end_automation_ecom.spec.js`.
+
 ---
 
 ### 8. `.not` — flip any assertion
@@ -1351,6 +1613,26 @@ expect: { timeout: 10000 },
 
 ---
 
+### 11. `toHaveText()` vs `toHaveValue()` (your note at the bottom of the ecom file)
+
+| | `toHaveText("x")` | `toHaveValue("x")` |
+|---|---|---|
+| Checks | the text between the tags | the value of a form field |
+| Use on | headings, labels, table cells, messages | `<input>`, `<textarea>`, `<select>` |
+| On a `<div>` | ✓ | ✗ throws `Error: Not an input element` (tested) |
+| On an `<input>` | ✗ (an input has no text) | ✓ |
+
+Your note is correct: both work on a **locator**, not on a plain string. For a string you already read (`const id = await ...textContent()`), use a generic assertion: `expect(id).toBe("...")`. Prefer the locator version — it retries.
+
+```js
+await expect(page.locator(".col-text")).toHaveText(OrderID);   // order id on the details page ✓
+await expect(country).toHaveValue("India");                     // what's in the country box ✓
+```
+
+> **Extra:** for API responses there's `await expect(response).toBeOK()` — see [API_TESTING.md → Part 4](API_TESTING.md#part-4-reading-the-response).
+
+---
+
 ### Recap: Assertions with expect
 
 - `expect(locator or page)` → web-first → **`await expect(...)`**, retries up to 5 s.
@@ -1359,6 +1641,8 @@ expect: { timeout: 10000 },
 - `toHaveAttribute("class", "x")` = whole value; use `/x/` for "contains".
 - `.not` flips any assertion. `.not.toHaveCount(0)` = "list has loaded".
 - It's `toBeTruthy`, not `toBeTruty`.
+- `toHaveText` = text of an element; `toHaveValue` = value of a form field. Both need a locator.
+- Toasts disappear — check them with web-first assertions right after the action.
 
 
 ---
@@ -1377,6 +1661,7 @@ When Playwright waits for you automatically, when it doesn't, and how to wait co
 | **Single-element reads:** `textContent()`, `inputValue()`, `innerText()`, `isChecked()` — wait until the element exists | **`count()`** — returns the count right now (maybe `0`) |
 | **Web-first assertions:** `await expect(locator).toXxx()` — retry for up to 5 s | **Generic assertions:** `expect(value).toXxx()` — compare once |
 | `page.goto()` — waits for the `load` event | `page.locator()` — doesn't search at all yet |
+| `click()` on the **next** page's element waits for it — so no extra wait is needed between pages (your note in the ecom file is right) | **`isVisible()`** — answers right now (tested) |
 
 All tested: on a page where 4 product titles appear after 1 second:
 
@@ -1525,6 +1810,31 @@ await expect(cardTitle).not.toHaveCount(0, { timeout: 10000 });
 
 ---
 
+### 5. Waiting before a `count()` loop
+
+`count()` doesn't wait. In a loop, wait first — otherwise `count()` can return `0`, the loop never runs, and there's **no error**: the test just skips the work and fails later with a confusing message.
+
+```js
+// end_to_end_automation_ecom.spec.js
+await cardBody.last().waitFor();          // wait for a card
+const countProduct = await cardBody.count();
+
+// webAPI_1.spec.js
+const rows = page.locator("tbody tr");
+await rows.first().waitFor();             // wait for at least one ROW
+const rowCount = await rows.count();
+```
+
+| Wait for... | Good? |
+|---|---|
+| `rows.first().waitFor()` | ✓ waits for an actual row |
+| `cardBody.last().waitFor()` | ✓ works here. Note: `last()` means "the last one **so far**", so it doesn't strictly guarantee *all* items are there — fine on this site because all products arrive in one response (likely) |
+| `page.locator("tbody").waitFor()` (your ecom order list) | ✓ works, but for a hidden reason: an **empty** `<tbody>` has no size, so it counts as *not visible* and `waitFor()` keeps waiting until rows arrive (tested). `tbody tr` says what you mean more clearly |
+
+Or skip the loop with `filter()` — `click()` then waits for you. See [Part 10](#part-10-working-with-lists-and-tables).
+
+---
+
 ### Recap: Waiting and Timing
 
 - One-element methods and web-first assertions wait. `allTextContents()` and `count()` don't.
@@ -1533,6 +1843,7 @@ await expect(cardTitle).not.toHaveCount(0, { timeout: 10000 });
 - `waitForLoadState` only checks the **current** page — right after a click it can return too early. `networkidle` is discouraged by the docs.
 - Avoid `waitForTimeout()` (fixed sleeps).
 - Defaults: test 30 s, expect 5 s.
+- `isVisible()` and `count()` don't wait. Before a `count()` loop, wait for an **item** (`rows.first().waitFor()`), not just the empty container.
 
 
 ---
@@ -1722,6 +2033,17 @@ const userName = page.locator("input#username");
 
 **Rule of thumb:** start with `const`; switch to `let` only if you need to reassign.
 
+Real examples of `let` from your files:
+
+```js
+for (let i = 0; i < countProduct; i++) { ... }    // i changes every round
+
+let token;                                         // webAPI_1.spec.js: declared at the top, no value yet
+test.beforeAll(async () => { token = "..."; });    // filled later, inside the hook
+```
+
+Your comment in `webAPI_1.spec.js` is right: a `const` must get its value on the same line (`const token;` on its own is a SyntaxError: *Missing initializer in const declaration*) and can never be re-assigned.
+
 ---
 
 ### 2. Object destructuring — `{ test, expect }`
@@ -1828,6 +2150,20 @@ Full walkthrough with your real code: [Part 8, section 6](#part-8-new-tabs-and-c
 
 `.trim()` is very handy with `textContent()`, because HTML text often has extra spaces.
 
+Your product loop uses two of these together, so the comparison ignores extra spaces and upper/lower case:
+
+```js
+const product = (await cardBody.nth(i).locator("b").textContent()).trim();
+if (product.toLowerCase() === productName.toLowerCase()) { ... }   // "iphone 13 pro" === "iphone 13 pro"
+```
+
+And `split()` + `trim()` cut the order id out of the label text `" | 6ac888aa2be7a4bc2b96bf5a | "`:
+
+```js
+const OrderID = rawOrderID.split("|")[1].trim();
+// split("|") → [" ", " 6ac888aa2be7a4bc2b96bf5a ", " "]  → [1] → .trim() → "6ac888aa2be7a4bc2b96bf5a"
+```
+
 ---
 
 ### 6. Arrays: index from 0
@@ -1891,6 +2227,69 @@ You'll need this when you move to `.ts` test files.
 
 ---
 
+### 11. `for` loops and `break`
+
+```js
+for (let i = 0; i < countProduct; i++) {    // start at 0; keep going while i < count; add 1 each round
+  const product = "...";                    // read item i
+  if (product === wanted) {
+    // do something with item i
+    break;                                  // found it → leave the loop now
+  }
+}
+```
+
+| Part | Meaning |
+|---|---|
+| `let i = 0` | start counting at 0 (same counting as `nth(0)`) |
+| `i < countProduct` | keep looping while this is true — so the last round is `countProduct - 1` |
+| `i++` | add 1 after each round |
+| `break` | leave the loop immediately |
+
+**Watch out:** if nothing matches, the loop just ends quietly and the test carries on. In your order test the next `expect` then fails — which is fine — but the error won't say "order not found". `filter()` avoids this ([Part 10](#part-10-working-with-lists-and-tables)).
+
+---
+
+### 12. `==` vs `===`
+
+| | `==` | `===` |
+|---|---|---|
+| Name | loose equality | strict equality |
+| Converts types first? | yes: `1 == "1"` → `true` | no: `1 === "1"` → `false` |
+| Use | avoid | ✓ always |
+
+`end_to_end_automation_ecom.spec.js` (order loop) uses `==`; `webAPI_1.spec.js` uses `===`. Both compare two strings there, so both work — but make `===` your habit.
+
+---
+
+### 13. Template literals — `` `text ${variable}` ``
+
+```js
+const productName = "IPHONE 13 PRO";
+page.locator(`h3:has-text('${productName}')`);   // → "h3:has-text('IPHONE 13 PRO')"
+```
+
+- Use **backticks** `` ` `` (not quotes) and put the variable inside `${ }`.
+- Same as `"h3:has-text('" + productName + "')"`, just easier to read.
+- With normal quotes, `${productName}` is **not** replaced — it stays as plain text.
+
+---
+
+### 14. Regular expressions (regex) — just enough
+
+A regex is a **text pattern** written between slashes: `/.../`. Playwright accepts them in many places: `toHaveTitle(/Rahul/)`, `toHaveAttribute("class", /blinkingText/)`, `filter({ hasText: /.../ })`.
+
+| Pattern | Means | Matches |
+|---|---|---|
+| `/India/` | contains "India" | "India", "British Indian Ocean Territory" |
+| `/^India$/` | starts (`^`) and ends (`$`) with exactly "India" | "India" only |
+| `/^\s*India\s*$/` | same, but spaces allowed around it (`\s*` = zero or more spaces) | "India", " India " |
+| `/india/i` | `i` at the end = ignore case | "India", "INDIA" |
+
+Your `/^\s*India\s*$/` is exactly right for a button whose text is `" India"` with a leading space.
+
+---
+
 ### Recap: JavaScript Basics Used in Tests
 
 - `const` by default; `let` only when you reassign.
@@ -1898,3 +2297,78 @@ You'll need this when you move to `.ts` test files.
 - `async () => {}` = anonymous async arrow function = what you pass to `test`.
 - `split()` → array; `[i]` picks a piece (from 0); you can chain.
 - Arrays and `nth()` both count from 0.
+- `for (let i = 0; i < n; i++) { ... break; }` — loop over `nth(i)`, `break` when found.
+- Use `===`, not `==`.
+- Template literal: backticks + `${variable}`.
+- Regex `/^\s*India\s*$/` = exactly "India", spaces allowed around it.
+
+---
+
+## Part 10: Working with Lists and Tables
+
+From your two new files: find **one** product among many cards, or **one** order among many rows, then act on *that* item.
+
+---
+
+### 1. The loop pattern (your code)
+
+```js
+const cardBody = page.locator(".card-body");      // ALL cards
+await cardBody.last().waitFor();                  // 1. wait — count() doesn't
+const count = await cardBody.count();             // 2. how many?
+
+for (let i = 0; i < count; i++) {                 // 3. look at each one
+  const name = (await cardBody.nth(i).locator("b").textContent()).trim();   // 4. read inside card i
+  if (name.toLowerCase() === productName.toLowerCase()) {                   // 5. is it the one?
+    await cardBody.nth(i).locator(".fa-shopping-cart").click();             // 6. act inside THE SAME card
+    break;                                                                  // 7. stop
+  }
+}
+```
+
+| Step | Concept | Explained in |
+|---|---|---|
+| 1 | `count()` doesn't wait | [Part 7 §5](#5-waiting-before-a-count-loop) |
+| 3 | `for` loop | [Part 9 §11](#11-for-loops-and-break) |
+| 4 | chaining `nth(i).locator("b")`; `(await ...).trim()` | [Part 3 §6](#6-extra-chaining-locators), [Part 2 §9](#9-brackets-around-await--await-xtextcontenttrim) |
+| 5 | compare ignoring case and spaces | [Part 9 §5](#5-strings-split-and-picking-pieces) |
+| 6 | act inside the same item | [Part 3 §6](#6-extra-chaining-locators) |
+
+The same pattern finds the order row in "My Orders": read `rows.nth(i).locator("th")`, then click `rows.nth(i).getByRole("button", { name: "View" })`.
+
+---
+
+### 2. The one-line version: `filter()`
+
+```js
+// Open the order (works for both of your order tests)
+await page.locator("tbody tr")
+  .filter({ hasText: orderId })                   // keep only the row that contains the id
+  .getByRole("button", { name: "View" })          // that row's View button
+  .click();                                       // auto-waits until such a row exists
+
+// Add a product to the cart: filter on the NAME element inside the card
+await page.locator(".card-body")
+  .filter({ has: page.locator("b", { hasText: productName }) })
+  .locator(".fa-shopping-cart")
+  .click();
+```
+
+| | Loop | `filter()` |
+|---|---|---|
+| Length | ~8 lines | 1 statement |
+| Wait needed before it? | yes (`count()` doesn't wait) | no — `click()` auto-waits for a matching item |
+| If nothing matches | loop ends quietly; test fails later with a confusing error | `click()` times out with "waiting for locator(...).filter(...)" — clear |
+| Exact match | you control it (`===`, `toLowerCase()`) | `hasText` is "contains, ignoring case" — use a regex (`/^\s*IPHONE 13 PRO\s*$/i`) when other items contain the same words |
+
+**Watch out:** `filter({ hasText })` on a whole card checks the **whole card text** (name + price + button text). That's why the example above filters on the `<b>` name element with `has:`.
+
+**Rule of thumb:** learn the loop (it shows how things work, and interviews ask for it); prefer `filter()` in real tests.
+
+---
+
+### Recap: Working with Lists and Tables
+
+- Loop: wait → `count()` → `for` with `nth(i)` → read inside the item → compare → act inside the same item → `break`.
+- `filter({ hasText })` / `filter({ has })` does the same in one statement and auto-waits.
+- Always act **inside** the item you found (`nth(i).locator(...)`), never with a page-wide locator.

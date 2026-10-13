@@ -1,3 +1,7 @@
+# Getting Selectors with SelectorsHub
+
+> Part of your Playwright notes — main index: [GUIDE.md](GUIDE.md) · quick lookups: [QUICK_REFERENCE.md](QUICK_REFERENCE.md)
+
 Looking at your screenshots, here's how to use SelectorsHub to grab selectors for Playwright:
 
 ## How SelectorsHub Works

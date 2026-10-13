@@ -1,5 +1,7 @@
 # Understanding `{ browser }` in Playwright Tests
 
+> Part of your Playwright notes — main index: [GUIDE.md](GUIDE.md) · quick lookups: [QUICK_REFERENCE.md](QUICK_REFERENCE.md)
+
 When you start with Playwright, you see code like this:
 
 ```js

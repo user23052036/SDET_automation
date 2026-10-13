@@ -91,31 +91,39 @@ test.only("ecom_automation", async ({ browser }) => {
   // </a>
   await mainPage.locator('a.btnn').click();
 
+  const toast = mainPage.locator('.toast-title');
+  await expect(toast).toBeVisible();
+  await expect(toast).toHaveText('Order Placed Successfully');
+
   // finally getting the order id
   //   <td class="em-spacer-1" ...>
   //   <label class="ng-star-inserted"> | 6ac888aa2be7a4bc2b96bf5a | </label>
   // </td>
 
-  const rawOrderID = await mainPage.locator('em-spacer-1').textContent();
+  const rawOrderID = await mainPage.locator('td label.ng-star-inserted').textContent();
   const OrderID = rawOrderID.split('|')[1].trim();
   console.log(OrderID);
 
-  const allOrders = await mainPage.locator("button[routerlink='/dashboard/myorders']").click();
+  await mainPage.locator("button[routerlink='/dashboard/myorders']").click();
   await mainPage.locator('tbody').waitFor();  // because count doesnot have auto wait capability 
-  const countOrder = await mainPage.locator("tbody tr").count();
+  const rows = mainPage.locator("tbody tr");   // locator, no await
+  const countOrder = await rows.count();       // number
   
   for(let i=0; i<countOrder; i++){
 
-    const currOrderId = allOrders.nth(i).locator('th').textContent();
+    const currOrderId = await rows.nth(i).locator('th').textContent();
     if (currOrderId == OrderID){ // we could have done OrderId.includes(rawOrderID)
       
-      await countOrder.nth(i).getByRole('button', {name: 'View'}).click();
+      await rows.nth(i).getByRole('button', {name: 'View'}).click();
       break;
     }
   }
-  const checkOrderId =  await mainPage.locator('.col-text').textContent();
-  await expect(checkOrderId ).toHaveValue(OrderID); 
+  await expect(mainPage.locator('.col-text')).toHaveText(OrderID);
   });
+
+// toHaveValue only works on a locator, and only for form fields like <input>. Here you pass it a plain string, 
+// so it will throw.
+// Reading textContent() first also gives up auto-waiting. If the details page hasn’t loaded yet, you read empty text.
 
 // .a .b (space)	an element with class b inside an element with class a (parent → child)
 // .a.b (no space)	one element that has both classes

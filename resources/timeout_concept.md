@@ -1,3 +1,7 @@
+# Timeouts: test vs `expect` vs action
+
+> Part of your Playwright notes — main index: [GUIDE.md](GUIDE.md) · quick lookups: [QUICK_REFERENCE.md](QUICK_REFERENCE.md)
+
 This is an important Playwright concept. The easiest way to remember it is:
 
 > **`timeout` = maximum time for the entire test.**
@@ -270,3 +274,19 @@ Think of them as:
 **Action timeout → "How long can my action wait?"**
 
 **Assertion timeout → "How long can my expectation wait for the condition to become true?"**
+
+---
+
+## Your real example (13 Oct 2026, `webAPI_1.spec.js`)
+
+```text
+Test timeout of 30000ms exceeded.
+Error: locator.click: Test timeout of 30000ms exceeded.
+  - waiting for locator('button[routerlink=\'/dashboard/myorders\']')
+```
+
+- The page was blank (no `page.goto()`), so the button never appeared.
+- `click()` has **no action timeout of its own** by default, so it kept waiting until the **test** timeout (30 s) ran out — that's why the message names the test timeout, not an action timeout.
+- With `use: { actionTimeout: 10000 }` in the config, the same line would have failed after 10 s instead, with a `Timeout 10000ms exceeded` message for the click.
+
+Lesson: a timeout usually means "the thing never appeared" — look at the screenshot / trace to see what page you were actually on. → [API_TESTING.md → Part 8](API_TESTING.md#part-8-debugging-log--the-errors-you-hit-and-why)
