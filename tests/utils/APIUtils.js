@@ -20,17 +20,18 @@ class APIUtils {
     this.apiContext = apiContext;
   }
 
-  
   async getToken(loginPayload) {
     const loginResponse = await this.apiContext.post(
       `${BASE_URL}${ENDPOINTS.LOGIN}`,
       { data: loginPayload }
     );
 
-    expect(loginResponse.ok(), 
+    expect(loginResponse.ok(), // 200, 201, 202,...299
           `Login API failed with status ${loginResponse.status()}`  // error message displayed when the assertion fails
-          ).toBeTruthy();
+          ).toBeTruthy(); // true
+
     const responseBody = await loginResponse.json();
+    console.log(responseBody);
     return responseBody.token;
   }
 
@@ -47,8 +48,12 @@ class APIUtils {
       }
     );
 
-    expect(orderResponse.ok(), `Create Order API failed with status ${orderResponse.status()}`).toBeTruthy();
+    expect(orderResponse.ok(), 
+          `Create Order API failed with status ${orderResponse.status()}`
+          ).toBeTruthy();
+
     const responseBody = await orderResponse.json();
+    console.log(responseBody);
     return responseBody.orders[0];
   }
 }

@@ -51,7 +51,6 @@ test.beforeAll(async () => {
 
   // Step 2 — Create an order via API so the UI test has something to verify.
   orderId = await apiUtils.createOrder(ORDER_PAYLOAD, token);
-
   console.log(`[Setup] Token acquired. Order created: ${orderId}`);
 });
 
