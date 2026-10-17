@@ -1,98 +1,84 @@
+//
+// https://rahulshettyacademy.com/api/ecom/order/get-orders-for-customer/6ac29de02be7a4bc2b898730
 
-const { test, expect, request } = require('@playwright/test');
-const { APIUtils } = require('./utils/APIUtils');
+const { test, expect, request } = require("@playwright/test");
+const { APIUtils } = require("./utils/APIUtils");
 
-// ---------------------------------------------------------------------------
-// Test data — in real projects this comes from a fixtures file or env vars.
-// Hardcoding here is fine while learning.
-// ---------------------------------------------------------------------------
+const APP_URL = process.env.APP_URL;
+const PRODUCT_NAME = process.env.PRODUCT_NAME;
+
+let token;
+let userID;
+let cartResponse;
+let orderID;
+
 const LOGIN_PAYLOAD = {
-  userEmail:    'qnhmtm@gmail.com',
-  userPassword: 'Kitti001.@',
+  userEmail: "qnhmtm@gmail.com",
+  userPassword: "Kitti001.@",
 };
-
+const ADD_TO_CART_PAYLOAD = {
+  _id: "",
+  product: {
+    _id: "6960eac0c941646b7a8b3e68",
+    productName: "ZARA COAT 3",
+    productCategory: "electronics",
+    productSubCategory: "mobiles",
+    productPrice: 11500,
+    productDescription: "Apple phone",
+    productImage:
+      "https://rahulshettyacademy.com/api/ecom/uploads/productImage_1767959232316.jpeg",
+    productRating: "0",
+    productTotalOrders: "0",
+    productStatus: true,
+    productFor: "women",
+    productAddedBy: "admin",
+    __v: 0,
+  },
+};
 const ORDER_PAYLOAD = {
-  orders: [{
-      country: 'Cuba',
-      productOrderedId: '6960ea76c941646b7a8b3dd5',
-    },
-  ],
+  orders: [{ country: "Cuba", productOrderedId: "6960eac0c941646b7a8b3e68" }],
 };
 
-const PRODUCT_NAME = 'IPHONE 13 PRO';
-const APP_URL      = 'https://rahulshettyacademy.com/client/#/dashboard/dash';
+// No. A test.beforeAll in one spec file does not run when you execute other spec files. Its scope is the file, or the test.
+// describe block it’s declared in.
 
+// we try to sit/intersept the incomming GET request before it hits the browser and edit the incomming json and render it
+// in the browser
 
-
-// ---------------------------------------------------------------------------
-// Module-scoped variables — declared here so all tests in this file can
-// share them. They are populated once in beforeAll, not before every test.
-// ---------------------------------------------------------------------------
-let apiContext; // Playwright HTTP client (no browser)
-let apiUtils;   // Our helper class
-let token;      // Bearer token from login
-let orderId;    // Order ID created via API, verified via UI
-
-
-
-// ---------------------------------------------------------------------------
-// beforeAll — runs ONCE before any test in this file.
-// Perfect for expensive setup: login, seed data, etc.
-// Use beforeEach only when each test truly needs a fresh state.
-// ---------------------------------------------------------------------------
 test.beforeAll(async () => {
-  // Create a dedicated API context (no browser, just HTTP).
-  // ignoreHTTPSErrors is useful in non-prod environments with self-signed certs.
-  apiContext = await request.newContext({ ignoreHTTPSErrors: true });
-  apiUtils   = new APIUtils(apiContext);
+  const apiContext = await request.newContext();
+  const apiUtils = new APIUtils(apiContext);
 
-  // Step 1 — Authenticate once and cache the token.
-  token   = await apiUtils.getToken(LOGIN_PAYLOAD);
+  const loginResponse = await apiUtils.getLoginToken(LOGIN_PAYLOAD);
+  token = loginResponse.token;
 
-  // Step 2 — Create an order via API so the UI test has something to verify.
-  orderId = await apiUtils.createOrder(ORDER_PAYLOAD, token);
-  console.log(`[Setup] Token acquired. Order created: ${orderId}`);
+  ADD_TO_CART_PAYLOAD._id = loginResponse.userId;
+  cartResponse = await apiUtils.addToCart(ADD_TO_CART_PAYLOAD, token);
+  console.log(cartResponse);
+
+  let response = await apiUtils.createOrder(ORDER_PAYLOAD, token);
+  orderID = response.orders[0];
+  console.log(`[Setup] Token acquired. Order created: ${orderID}`);
 });
 
-
-
-test('Verify API-created order is visible in My Orders (UI)', async ({ page }) => {
-
-  // STEP 1 — Inject the auth token into the browser's localStorage BEFORE
-  // the app loads. addInitScript runs on every new page/frame before any JS.
-  // This simulates a logged-in session without clicking the login form.
+test("Verify API-created order is visible in My Orders (UI)", async ({
+  page,
+}) => {
   await page.addInitScript((value) => {
-    window.localStorage.setItem('token', value);
+    window.localStorage.setItem("token", value);
   }, token);
 
-  
   await page.goto(APP_URL);
   await page.locator('button[routerlink*="myorders"]').click();
 
-  // Example: find the row containing our Order ID
-  await page.locator('tbody').waitFor();  // because count doesnot have auto wait capability 
-  const rows = page.locator("tbody tr"); 
-  const countOrder = await rows.count();  // number
-  
-  for(let i=0; i<countOrder; i++){
+  const orderRow = page.locator("tbody tr").filter({
+    has: page.locator("th", { hasText: orderID }),
+  });
 
-    const currOrderId = await rows.nth(i).locator('th').textContent();
-    if (currOrderId == orderId){ 
-      
-      await rows.nth(i).getByRole('button', {name: 'View'}).click();
-      break;
-    }
-  }
-  await expect(page.locator('.col-text')).toHaveText(orderId);
-  console.log(`[Test] Verifying orderId: ${orderId} for product: ${PRODUCT_NAME}`);
-});
+  await expect(orderRow).toHaveCount(1);
+  await orderRow.getByRole("button", { name: "View", exact: true }).click();
 
-// ---------------------------------------------------------------------------
-// afterAll — clean up the API context when all tests in this file finish.
-// Always dispose of contexts you created manually (request.newContext).
-// Playwright auto-disposes browser contexts, but NOT manual API contexts.
-// ---------------------------------------------------------------------------
-test.afterAll(async () => {
-  await apiContext.dispose();
-  console.log('[Teardown] API context disposed.');
+  await expect(page.locator(".col-text")).toHaveText(orderID);
+
+  console.log(`[Test] Verified order: ${orderID} for product: ${PRODUCT_NAME}`);
 });

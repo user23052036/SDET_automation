@@ -1,40 +1,60 @@
-
-const { expect } = require('@playwright/test');
+const { expect } = require("@playwright/test");
 
 // ---------------------------------------------------------------------------
 // Endpoint constants — in real projects these come from a config/env file,
 // but we define them here for clarity while learning.
 // ---------------------------------------------------------------------------
 const ENDPOINTS = {
-  LOGIN:        '/api/ecom/auth/login',         // POST — returns { token, userId, message }
-  CREATE_ORDER: '/api/ecom/order/create-order', // POST — needs Authorization header
+  LOGIN: process.env.LOGIN_ENDPOINT,
+  ADD_TO_CART: process.env.ADD_TO_CART_ENDPOINT,
+  CREATE_ORDER: process.env.CREATE_ORDER_ENDPOINT,
 };
 
-const BASE_URL = 'https://rahulshettyacademy.com';
-
-
+const BASE_URL = process.env.BASE_URL;
 
 class APIUtils {
-
   constructor(apiContext) {
     this.apiContext = apiContext;
   }
 
-  async getToken(loginPayload) {
+  // async createAccount(){
+
+  // }
+
+  async getLoginToken(loginPayload) {
     const loginResponse = await this.apiContext.post(
       `${BASE_URL}${ENDPOINTS.LOGIN}`,
-      { data: loginPayload }
+      { data: loginPayload },
     );
 
-    expect(loginResponse.ok(), // 200, 201, 202,...299
-          `Login API failed with status ${loginResponse.status()}`  // error message displayed when the assertion fails
-          ).toBeTruthy(); // true
+    expect(
+      loginResponse.ok(), // 200, 201, 202,...299
+      `Login API failed with status ${loginResponse.status()}`, // error message displayed when the assertion fails
+    ).toBeTruthy(); // true
 
     const responseBody = await loginResponse.json();
     console.log(responseBody);
-    return responseBody.token;
+    return responseBody;
   }
 
+  async addToCart(addToCartPayload, token) {
+    const cartResponse = await this.apiContext.post(
+      `${BASE_URL}${ENDPOINTS.ADD_TO_CART}`,
+      {
+        data: addToCartPayload,
+        headers: { Authorization: token },
+      },
+    );
+
+    expect(
+      cartResponse.ok(),
+      `Add To Cart API failed with status ${cartResponse.status()}`,
+    ).toBeTruthy();
+
+    const responseBody = await cartResponse.json();
+    // console.log(cartResponse);
+    return responseBody;
+  }
 
   async createOrder(orderPayload, token) {
     const orderResponse = await this.apiContext.post(
@@ -45,17 +65,19 @@ class APIUtils {
           // Standard Authorization header — every secured endpoint needs this.
           Authorization: token,
         },
-      }
+      },
     );
 
-    expect(orderResponse.ok(), 
-          `Create Order API failed with status ${orderResponse.status()}`
-          ).toBeTruthy();
+    const bodyText = await orderResponse.text();
+    expect(
+      orderResponse.ok(),
+      `Create Order failed: ${orderResponse.status()}\nResponse: ${bodyText}`,
+    ).toBeTruthy();
 
     const responseBody = await orderResponse.json();
     console.log(responseBody);
-    return responseBody.orders[0];
+    return responseBody;
   }
 }
 
-module.exports = {APIUtils};
+module.exports = { APIUtils };

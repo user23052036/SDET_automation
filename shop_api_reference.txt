@@ -1,0 +1,299 @@
+
+
+Base URL: https://rahulshettyacademy.com
+UI URL: https://rahulshettyacademy.com/client
+
+
+
+
+
+
+1. LOGIN
+========
+Method: POST
+Endpoint: https://rahulshettyacademy.com/api/ecom/auth/login 
+
+Request payload:
+{
+  "userEmail": "qnhmtm@gmail.com",
+  "userPassword": "Kitti001.@"
+}
+
+Response:
+{
+  "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJfaWQiOiI2YWMyOWRlMDJiZTdhNGJjMmI4OTg3MzAiLCJ1c2VyRW1haWwiOiJxbmhtdG1AZ21haWwuY29tIiwidXNlck1vYmlsZSI6MTIzNDU2Nzg5MCwidXNlclJvbGUiOiJjdXN0b21lciIsImlhdCI6MTc5MjIxNjY0NCwiZXhwIjoxODIzNzc0MjQ0fQ.rE8WJDTRdVnwAfFKQj8Nc3caFUuotRY8YceO6fkWXNI",
+  "userId": "6ac29de02be7a4bc2b898730",
+  "message": "Login Successfully"
+}
+
+Values to capture dynamically:
+- token: loginResponse.token
+- userId: loginResponse.userId
+
+
+
+
+
+
+2. ADD PRODUCT TO CART
+======================
+Method: POST
+Endpoint: https://rahulshettyacademy.com/api/ecom/user/add-to-cart
+Authorization header used in the test: Authorization: <token from login>
+
+Request payload:
+{
+  "_id": "6ac29de02be7a4bc2b898730",
+  "product": {
+    "_id": "6960eac0c941646b7a8b3e68",
+    "productName": "ZARA COAT 3",
+    "productCategory": "electronics",
+    "productSubCategory": "mobiles",
+    "productPrice": 11500,
+    "productDescription": "Apple phone",
+    "productImage": "https://rahulshettyacademy.com/api/ecom/uploads/productImage_1767959232316.jpeg",
+    "productRating": "0",
+    "productTotalOrders": "0",
+    "productStatus": true,
+    "productFor": "women",
+    "productAddedBy": "admin",
+    "__v": 0
+  }
+}
+
+Response:
+{
+  "message": "Product Added To Cart"
+}
+
+ID mapping:
+- Outer _id = userId returned by login (customer ID).
+- product._id = product ID; it is not the customer ID.
+- Set the outer _id after login completes.
+
+
+
+
+
+
+
+3. PLACE ORDER
+==============
+Method: POST (as used in the supplied Playwright helper)
+Endpoint: https://rahulshettyacademy.com/api/ecom/order/create-order
+Authorization header used in the test: Authorization: <token from login>
+
+Request payload:
+{
+  "orders": [
+    {
+      "country": "Cuba",
+      "productOrderedId": "6960eac0c941646b7a8b3e68"
+    }
+  ]
+}
+
+Response:
+{
+  "orders": [
+    "6ad30fa793b084c41f54ff7b"
+  ],
+  "productOrderId": [
+    "6960eac0c941646b7a8b3e68"
+  ],
+  "message": "Order Placed Successfully"
+}
+
+ID mapping:
+- Request orders[0].productOrderedId = product._id from the cart payload.
+- Response orders[0] = newly created order ID (capture as orderID).
+- Response productOrderId[0] = product ID.
+
+
+
+
+
+
+
+4. AUTHENTICATION TOKEN OBSERVATIONS
+====================================
+User observation: The authentication token changes between logins.
+
+Token sample A:
+eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJfaWQiOiI2YWMyOWRlMDJiZTdhNGJjMmI4OTg3MzAiLCJ1c2VyRW1haWwiOiJxbmhtdG1AZ21haWwuY29tIiwidXNlck1vYmlsZSI6MTIzNDU2Nzg5MCwidXNlclJvbGUiOiJjdXN0b21lciIsImlhdCI6MTc5MjIxODA4OSwiZXhwIjoxODIzNzc1Njg5fQ.dbZCsNIGyhaE9O3ih3GVpXl7lUOW1mmVNjw3NiMTGzg
+
+Token sample B (also shown in the login response):
+eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJfaWQiOiI2YWMyOWRlMDJiZTdhNGJjMmI4OTg3MzAiLCJ1c2VyRW1haWwiOiJxbmhtdG1AZ21haWwuY29tIiwidXNlck1vYmlsZSI6MTIzNDU2Nzg5MCwidXNlclJvbGUiOiJjdXN0b21lciIsImlhdCI6MTc5MjIxNjY0NCwiZXhwIjoxODIzNzc0MjQ0fQ.rE8WJDTRdVnwAfFKQj8Nc3caFUuotRY8YceO6fkWXNI
+
+Interpretation:
+- These samples have different issued-at (iat) and expiry (exp) values.
+- Capture the current login response token instead of hardcoding these samples.
+- A new login does not universally guarantee a different JWT; issuance behavior
+  depends on the server, timestamp precision, and token claims.
+
+
+
+
+
+
+
+5. GET CUSTOMER ORDERS
+======================
+Method: GET
+Endpoint template:
+https://rahulshettyacademy.com/api/ecom/order/get-orders-for-customer/{userId}
+
+Observed endpoint:
+https://rahulshettyacademy.com/api/ecom/order/get-orders-for-customer/6ac29de02be7a4bc2b898730
+
+Request payload: None supplied (customer ID is in the URL).
+
+Response — no orders:
+{
+  "data": [],
+  "message": "No Orders"
+}
+
+Response — customer has orders:
+{
+  "data": [
+    {
+      "_id": "6ad328e293b084c41f553349",
+      "orderById": "6ac29de02be7a4bc2b898730",
+      "orderBy": "qnhmtm@gmail.com",
+      "productOrderedId": "Sat Oct 17",
+      "productName": "ZARA COAT 3",
+      "country": "Anguilla",
+      "productDescription": "Apple phone",
+      "productImage": "https://rahulshettyacademy.com/api/ecom/uploads/productImage_1767959232316.jpeg",
+      "orderDate": null,
+      "orderPrice": "11500",
+      "__v": 0
+    },
+    {
+      "_id": "6ad328e293b084c41f553346",
+      "orderById": "6ac29de02be7a4bc2b898730",
+      "orderBy": "qnhmtm@gmail.com",
+      "productOrderedId": "Sat Oct 17",
+      "productName": "ADIDAS ORIGINAL",
+      "country": "Anguilla",
+      "productDescription": "Apple phone",
+      "productImage": "https://rahulshettyacademy.com/api/ecom/uploads/productImage_1767959265156.jpg",
+      "orderDate": null,
+      "orderPrice": "11500",
+      "__v": 0
+    }
+  ],
+  "count": 2,
+  "message": "Orders fetched for customer Successfully"
+}
+
+Data observations (preserved, not corrected):
+- productOrderedId contains "Sat Oct 17", rather than the product ID seen in
+  the create-order request. This looks inconsistent; the cause is unverified.
+- orderDate is null.
+- orderPrice is a string; productPrice in the cart payload is a number.
+- These orders have different IDs and country values from the place-order
+  example above. Do not assume they are the same orders.
+
+
+
+
+
+
+
+6. GET CART COUNT — OBSERVED CALL 1
+==================================
+Method: GET (inferred from endpoint purpose; confirm in Network Headers)
+Endpoint:
+https://rahulshettyacademy.com/api/ecom/user/get-cart-count/6ac29de02be7a4bc2b898730
+
+Request payload: None supplied.
+
+Response — no orders:
+{
+  "message": "No Product in Cart"
+}
+
+Response — orders exist, cart empty:
+{
+  "message": "No Product in Cart"
+}
+
+Response — on Orders page, with orders and an item in cart:
+{
+  "count": 1,
+  "message": "Cart Data Found"
+}
+
+
+
+
+
+
+
+7. GET CART COUNT — OBSERVED CALL 2 (REPORTED DUPLICATE)
+=====================================================
+Method: GET (inferred from endpoint purpose; confirm in Network Headers)
+Endpoint:
+https://rahulshettyacademy.com/api/ecom/user/get-cart-count/6ac29de02be7a4bc2b898730
+
+Request payload: None supplied.
+
+Response — no orders:
+{
+  "message": "No Product in Cart"
+}
+
+Response — orders exist, cart empty:
+{
+  "message": "No Product in Cart"
+}
+
+Response — on Orders page, with orders and an item in cart:
+{
+  "count": 1,
+  "message": "Cart Data Found"
+}
+
+
+
+
+
+
+8. CART / ORDER DISTINCTION AND DUPLICATE-CALL NOTES
+===================================================
+- Order history and the current cart are separate states.
+- Existing orders can coexist with an empty cart.
+- "No Product in Cart" describes the cart, not the customer's order history.
+- Both reported cart-count calls and their responses are retained above.
+- The cause of the repeated calls is not established by these responses.
+- To investigate: clear Network, disable Keep log, navigate once, compare full
+  URLs and methods, and inspect the Initiator for each request.
+- Identical final user-ID segments in Network names do not establish that full
+  URLs are identical. OPTIONS followed by GET is not two GET requests.
+
+
+
+
+9. PLAYWRIGHT CONTEXT AND VALUE FLOW
+====================================
+1. Login using the configured email and password.
+2. Capture token and userId from the parsed login response.
+3. Set cart payload _id = userId; add the product using the captured token.
+4. Create the order using the same token and product ID.
+5. Capture create-order response orders[0] as orderID.
+6. For the supplied UI approach, use page.addInitScript to set localStorage
+   key "token" before navigating to the app.
+7. Open My Orders, find the row containing orderID, click View, and assert
+   the order detail ID matches orderID.
+
+
+
+
+
+Configuration context:
+- Credentials and environment-specific URLs can be loaded from .env.
+- Fixed endpoint paths can remain in an ENDPOINTS object.
+- token, userId and orderID come from responses at runtime.
+
